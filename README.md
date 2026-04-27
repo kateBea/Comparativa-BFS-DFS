@@ -21,8 +21,6 @@ Ambas dependencias son ligeras y modernas, y se integran fácilmente en el flujo
 
 La compilación del proyecto es sencilla y sigue un flujo estándar basado en CMake.
 
-### Linux
-
 Pasos:
 
 1. Clonar el repositorio  
@@ -38,17 +36,17 @@ cd <repo>
 mkdir build
 cd build
 cmake ..
-make
+make # (Linux)
 ```
 
 En Windows, el proceso es similar, pero se recomienda utilizar Visual Studio para generar y compilar el proyecto. Aunque no es estrictamente obligatorio, facilita considerablemente la configuración y compilación, especialmente si no se tiene experiencia previa con entornos de construcción en Windows. CMake generará automáticamente una solución compatible con Visual Studio que puede abrirse y compilarse desde el IDE.
 
-Uso
+## Uso
 
 Una vez compilado, el ejecutable permitirá lanzar pruebas comparativas entre BFS y DFS utilizando los parámetros definidos en los archivos de configuración. Estos parámetros pueden incluir el tamaño del grafo, el tipo de estructura, el nodo inicial y otras variables relevantes para el análisis.
 
 El uso de archivos TOML permite modificar fácilmente estos parámetros sin necesidad de recompilar, lo que agiliza la experimentación.
 
-Licencia
+## Licencia
 
 Este proyecto está bajo la licencia MIT. Esto significa que puedes usar, copiar, modificar y distribuir el software libremente, incluso para fines comerciales, siempre que se incluya la licencia original en cualquier copia del software.
