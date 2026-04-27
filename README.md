@@ -15,7 +15,7 @@ El proyecto depende de las siguientes librerías externas:
 - **Taskflow (C++)**: utilizada para la ejecución de tareas en paralelo y la experimentación con concurrencia.
 - **toml++**: utilizada para parsear archivos de configuración en formato TOML.
 
-Ambas dependencias son ligeras y modernas, y se integran fácilmente en el flujo de compilación.
+Ambas dependencias son ligeras, y se integran fácilmente en el flujo de compilación.
 
 ## Compilación
 
