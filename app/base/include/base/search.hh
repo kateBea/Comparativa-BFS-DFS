@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <base/gentree.hh>
 
+#include <ankerl/unordered_dense.h>
+
 namespace base {
 
     // devuelve true si el target existe en el árbol usando BFS
@@ -41,10 +43,10 @@ namespace base {
     auto search_dfs(const gentree<std::int32_t>& tree, std::int32_t startpoint, std::int32_t endpoint) -> std::int32_t;
 
     // Encuentra y muestra la red de nodos conectados a startpoint usando BFS
-    auto find_network_bfs(const gentree<std::int32_t>& tree, std::int32_t startpoint) -> std::unordered_set<std::int32_t>;
+    auto find_network_bfs(const gentree<std::int32_t>& tree, std::int32_t startpoint) -> ankerl::unordered_dense::set<std::int32_t>;
 
     // Encuentra y muestra la red de nodos conectados a startpoint usando DFS
-    auto find_network_dfs(const gentree<std::int32_t>& tree, std::int32_t startpoint) -> std::unordered_set<std::int32_t>;
+    auto find_network_dfs(const gentree<std::int32_t>& tree, std::int32_t startpoint) -> ankerl::unordered_dense::set<std::int32_t>;
 }
 
 #endif //SEARCH_HH

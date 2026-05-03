@@ -24,10 +24,11 @@
 #include <set>
 #include <queue>
 #include <stack>
-#include <unordered_set>
 
 #include <base/search.hh>
 #include <base/gentree.hh>
+
+#include <ankerl/unordered_dense.h>
 
 namespace base {
 
@@ -38,7 +39,7 @@ namespace base {
         const auto& graph{ tree.get_graph() };
         if (graph.empty()) return false;
 
-        std::unordered_set<std::int32_t> visited {};
+        ankerl::unordered_dense::set<std::int32_t> visited {};
         std::queue<std::int32_t> q{};
 
         // Comença des de tots els nodes (per assegurar-se en grafs disconnexos)
@@ -75,7 +76,7 @@ namespace base {
         const auto& graph{ tree.get_graph() };
         if (graph.empty()) return false;
 
-        std::unordered_set<std::int32_t> visited{};
+        ankerl::unordered_dense::set<std::int32_t> visited{};
         std::stack<std::int32_t> stack{};
 
         for (const auto& [start, _] : graph) {
@@ -114,7 +115,7 @@ namespace base {
         if (!graph.contains(startpoint) || !graph.contains(endpoint))
             return -1;
 
-        std::unordered_set<std::int32_t> visited{};
+        ankerl::unordered_dense::set<std::int32_t> visited{};
         std::queue<std::pair<std::int32_t, std::int32_t>> q{}; // node, dist
 
         q.emplace(startpoint, 0);
@@ -149,7 +150,7 @@ namespace base {
         if (!graph.contains(startpoint) || !graph.contains(endpoint))
             return -1;
 
-        std::unordered_set<std::int32_t> visited{};
+        ankerl::unordered_dense::set<std::int32_t> visited{};
         std::stack<std::pair<std::int32_t, std::int32_t>> stack{}; // node, depth
 
         stack.emplace(startpoint, 0);
@@ -176,14 +177,14 @@ namespace base {
     }
 
     auto find_network_bfs(const gentree<std::int32_t>& tree, std::int32_t startpoint)
-    -> std::unordered_set<std::int32_t>
+    -> ankerl::unordered_dense::set<std::int32_t>
     {
         const auto& graph{ tree.get_graph() };
 
         if (!graph.contains(startpoint))
             return {};
 
-        std::unordered_set<std::int32_t> visited{};
+        ankerl::unordered_dense::set<std::int32_t> visited{};
         std::queue<std::int32_t> q{};
 
         q.push(startpoint);
@@ -207,14 +208,14 @@ namespace base {
     }
 
     auto find_network_dfs(const gentree<std::int32_t>& tree, std::int32_t startpoint)
-    -> std::unordered_set<std::int32_t>
+    -> ankerl::unordered_dense::set<std::int32_t>
     {
         const auto& graph{ tree.get_graph() };
 
         if (!graph.contains(startpoint))
             return {};
 
-        std::unordered_set<std::int32_t> visited{};
+        ankerl::unordered_dense::set<std::int32_t> visited{};
         std::stack<std::int32_t> stack{};
 
         stack.push(startpoint);
