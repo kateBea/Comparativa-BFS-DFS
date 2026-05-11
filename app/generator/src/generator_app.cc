@@ -1,6 +1,25 @@
+// MIT License
 //
-// Created by zanet on 10/7/2025.
+// Copyright (c) 2026 ケイト
 //
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 
 #include <cstdint>
 #include <iostream>
@@ -15,6 +34,7 @@
 #include <base/logger.hh>
 #include <base/gentree.hh>
 #include <base/scoped_timer.hh>
+#include <base/utility.hh>
 
 #include <config_loader.hh>
 #include <generator_app.hh>
@@ -25,7 +45,17 @@ namespace gen {
         START_SCOPED_TIMER("generator_run_timer");
 
         // Directory to store generated graphs
-        std::filesystem::path output_dir{ "./resources" };
+        auto m{ pfd::message("Info",
+            "Select a folder to save generated graph files.",
+            pfd::choice::ok,
+            pfd::icon::info) };
+        
+        m.ready( 3000 );
+        m.kill();
+
+        std::string graph_dir{ base::open_folder_dialog() };
+        std::filesystem::path output_dir{ graph_dir };
+        output_dir /= "resources";
 
         if (std::filesystem::is_directory(output_dir)) {
             // para las pruebas primero limpiaré el directorio si existe
@@ -37,7 +67,19 @@ namespace gen {
 
         LOG_INFO("Starting graph generation...");
 
-        const std::string config_path{ "../../generator/generator_config.toml" };
+        m = pfd::message("Info",
+            "Select a configuration file for graph generation.",
+            pfd::choice::ok,
+            pfd::icon::info);
+
+        m.ready( 3000 );
+        m.kill();
+
+        const std::string config_path{ base::open_file_dialog({ 
+            base::FileDialogPair{ "Config files (*.toml)", "*.toml" },
+            base::FileDialogPair{ "All files (*.*)", "*" }
+        }) };
+
         generator_config config{};
         config.load(config_path);
 

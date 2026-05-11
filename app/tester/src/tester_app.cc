@@ -60,6 +60,15 @@ namespace tester {
 
     auto tester_app::load_graphs() -> void {
         tf::Taskflow task_graph{};
+
+        auto m{ pfd::message("Info",
+            "Select a folder containing graph files to test.",
+            pfd::choice::ok,
+            pfd::icon::info) };
+        
+        m.ready( 3000 );
+        m.kill();
+
         std::string graph_dir{ base::open_folder_dialog() };
 
         try {
