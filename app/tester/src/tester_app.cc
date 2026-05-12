@@ -111,8 +111,6 @@ namespace tester {
     }
 
     auto tester_app::run_tests() -> void {
-        tf::Taskflow task_graph{};
-
         for ( const auto &[path, current_graph]: m_graphs ) {
 
             LOG_INFO( "Running test on graph: {}", path );
@@ -162,12 +160,10 @@ namespace tester {
             }
         }
 
-        m_Executor.run( task_graph ).wait();
-
         // abrir archivo CSV para escribir resultados
         std::ofstream csv_file{ "test_report.csv" };
         if ( csv_file.is_open() ) {
-            csv_file << "Graph Name,Density,Nodes,Edges,DFS Time (ms),BFS Time (ms),DFS Path Length,BFS Path Length,Start Node,End Node\n";
+            csv_file << "Graph Name,Density,Nodes Count,Edge Count,DFS Time (ms),BFS Time (ms),Start Node\n";
         }
 
         for ( const auto &[path, report]: m_reports ) {
