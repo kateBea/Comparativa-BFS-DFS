@@ -163,7 +163,7 @@ namespace tester {
         // abrir archivo CSV para escribir resultados
         std::ofstream csv_file{ "test_report.csv" };
         if ( csv_file.is_open() ) {
-            csv_file << "Graph Name,Density,Nodes Count,Edge Count,DFS Time (ms),BFS Time (ms),Start Node\n";
+            csv_file << "Graph Name,Density,Node Count,Edge Count,DFS Time (ms),BFS Time (ms),Start Node\n";
         }
 
         for ( const auto &[path, report]: m_reports ) {
