@@ -51,3 +51,7 @@ obj/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# R files
+.Rhistory
+.RData
