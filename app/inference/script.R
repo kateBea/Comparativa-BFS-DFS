@@ -185,15 +185,6 @@ paired$Ratio <-
   paired$BFS_Mean
 
 # =========================================================
-# Speedup
-# > 1 -> DFS més ràpid
-# =========================================================
-
-paired$Speedup <-
-  paired$BFS_Mean /
-  paired$DFS_Mean
-
-# =========================================================
 # Eliminar files amb NA
 # =========================================================
 
@@ -211,6 +202,22 @@ cat(
 # =========================================================
 # Estadística descriptiva
 # =========================================================
+
+paired$Mean_Time <-
+  (
+    paired$DFS_Mean +
+    paired$BFS_Mean
+  ) / 2
+
+paired$Diff_Time <-
+  paired$DFS_Mean -
+  paired$BFS_Mean
+
+mean_diff <- mean(paired$Diff_Time)
+sd_diff <- sd(paired$Diff_Time)
+
+upper_limit <- mean_diff + 1.96 * sd_diff
+lower_limit <- mean_diff - 1.96 * sd_diff
 
 cat("\n=============================\n")
 cat("MITJANES GLOBALS\n")
@@ -235,14 +242,26 @@ cat(
 )
 
 cat(
-  "Mean Ratio DFS/BFS:",
-  mean(paired$Ratio),
-  "\n"
+  "DFS SD:",
+  sd(paired$DFS_Mean),
+  "ms\n"
 )
 
 cat(
-  "Mean Speedup BFS/DFS:",
-  mean(paired$Speedup),
+  "BFS SD:",
+  sd(paired$BFS_Mean),
+  "ms\n"
+)
+
+cat(
+  "Diff SD:",
+  sd(paired$Diff),
+  "ms\n"
+)
+
+cat(
+  "Mean Ratio DFS/BFS:",
+  mean(paired$Ratio),
   "\n"
 )
 
@@ -349,23 +368,32 @@ hist(
   xlab = ""
 )
 
-qqnorm(
-  paired$Log_Diff,
-  main = "QQ Log Diff"
-)
-
-qqline(paired$Log_Diff)
-
-# =========================================================
-# Log ratio
-# =========================================================
-
 hist(
   paired$Log_Ratio,
   col = "#64B5CD",
   main = "log(DFS/BFS)",
   xlab = ""
 )
+
+# =========================================================
+# QQ Plots
+# =========================================================
+
+qqnorm(
+  paired$Diff,
+  main = "QQ Plot DFS - BFS",
+  ylab = "Quantils mostral",
+  xlab = "Quantils teòrics"
+)
+
+qqline(paired$Diff)
+
+qqnorm(
+  paired$Log_Diff,
+  main = "QQ Log Diff"
+)
+
+qqline(paired$Log_Diff)
 
 qqnorm(
   paired$Log_Ratio,
@@ -374,16 +402,115 @@ qqnorm(
 
 qqline(paired$Log_Ratio)
 
+dev.off()
+
 # =========================================================
-# Speedup
+# Bland-Altman Plot with ggplot2
 # =========================================================
 
-hist(
-  paired$Speedup,
-  col = "#CCB974",
-  main = "Speedup BFS/DFS",
-  xlab = ""
+
+png(
+  "bland_altman.png",
+  width = 1000,
+  height = 700
 )
+
+ggplot(
+  paired,
+  aes(
+    x = Mean_Time,
+    y = Diff_Time
+  )
+) +
+
+  # =====================================================
+  # Scatter points
+  # =====================================================
+
+  geom_point(
+    aes(color = "Observacions"),
+    alpha = 0.7,
+    size = 2
+  ) +
+
+  # =====================================================
+  # Mean difference
+  # =====================================================
+
+  geom_hline(
+    aes(
+      yintercept = mean_diff,
+      color = "Mitjana diferència"
+    ),
+    linewidth = 1.2
+  ) +
+
+  # =====================================================
+  # Upper agreement limit
+  # =====================================================
+
+  geom_hline(
+    aes(
+      yintercept = upper_limit,
+      color = "95% limits of agreement"
+    ),
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+
+  # =====================================================
+  # Lower agreement limit
+  # =====================================================
+
+  geom_hline(
+    aes(
+      yintercept = lower_limit,
+      color = "95% limits of agreement"
+    ),
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+
+  # =====================================================
+  # Regression line
+  # =====================================================
+
+  geom_smooth(
+    aes(color = "Tendència lineal"),
+    method = "lm",
+    se = FALSE,
+    linewidth = 1.5
+  ) +
+
+  # =====================================================
+  # Labels
+  # =====================================================
+
+  labs(
+    title = "Bland-Altman Plot DFS vs BFS",
+    x = "Mitjana DFS i BFS (ms)",
+    y = "DFS - BFS (ms)",
+    color = "Llegenda"
+  ) +
+
+  # =====================================================
+  # Custom colors
+  # =====================================================
+
+  scale_color_manual(
+    values = c(
+      "Observacions" = "#4C72B0",
+      "Mitjana diferència" = "red",
+      "95% limits of agreement" = "darkgreen",
+      "Tendència lineal" = "blue"
+    )
+  ) +
+
+  # =====================================================
+  # Theme
+  # =====================================================
+
+  theme_minimal(base_size = 14)
 
 dev.off()
 
