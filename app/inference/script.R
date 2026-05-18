@@ -27,6 +27,7 @@
 if (!requireNamespace("ggplot2", quietly = TRUE)) {
   install.packages("ggplot2")
 }
+
 if (!requireNamespace("reshape2", quietly = TRUE)) {
   install.packages("reshape2")
 }
@@ -34,50 +35,404 @@ if (!requireNamespace("reshape2", quietly = TRUE)) {
 library(ggplot2)
 library(reshape2)
 
-data <- read.csv("report.csv", check.names = FALSE, stringsAsFactors = FALSE)
+# =========================================================
+# Llegir dades dels benchmarks
+# =========================================================
 
-cat("Files:", nrow(data), " Columnes:", ncol(data), "\n")
-print(colnames(data))
+data_0 <- read.csv(
+  "report_0.csv",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
 
-# Funció auxiliar per detectar automàticament columnes
-# segons un patró de text (sense modificar els noms originals)
-find_col <- function(pattern) {
+data_1 <- read.csv(
+  "report_1.csv",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+data_2 <- read.csv(
+  "report_2.csv",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+data_3 <- read.csv(
+  "report_3.csv",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+data_4 <- read.csv(
+  "report_4.csv",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+# =========================================================
+# Funció auxiliar per detectar columnes
+# =========================================================
+
+find_col <- function(pattern, data) {
+
   cols <- colnames(data)
-  m <- grep(pattern, cols, ignore.case = TRUE)
-  if (length(m) == 0) stop(paste("Columna no trobada:", pattern))
+
+  m <- grep(
+    pattern,
+    cols,
+    ignore.case = TRUE
+  )
+
+  if (length(m) == 0) {
+    stop(paste("Columna no trobada:", pattern))
+  }
+
   cols[m[1]]
 }
 
-graph_name        <- find_col("Graph Name")
-density_col    <- find_col("Density")
-nodes_col      <- find_col("Node Count")
-edges_col      <- find_col("Edge Count")
-bfs_col        <- find_col("BFS Time")
-dfs_col        <- find_col("DFS Time")
-start_node_col <- find_col("Start Node")
+# =========================================================
+# Detectar columnes
+# =========================================================
 
-# Filtrar només observacions aparellades (files amb temps BFS i DFS disponibles)
-paired <- data[!is.na(data[[dfs_col]]) & !is.na(data[[bfs_col]]), ]
-print(paste("Observacions aparellades:", nrow(paired)))
-print(paired)
+graph_name_col <- find_col("Graph Name", data_0)
+density_col    <- find_col("Density", data_0)
+nodes_col      <- find_col("Node Count", data_0)
+edges_col      <- find_col("Edge Count", data_0)
+start_node_col <- find_col("Start Node", data_0)
 
-# Diferència de temps entre DFS i BFS
-# Valor negatiu -> DFS més ràpid
-# Valor positiu -> BFS més ràpid
-paired$Diff <- paired[[dfs_col]] - paired[[bfs_col]]
+bfs_col <- find_col("BFS Time", data_0)
+dfs_col <- find_col("DFS Time", data_0)
 
-# Histogrames de totes les variables
-# Exploració inicial de les distribucions per validar normalitat
-png("histograms.png", width = 1200, height = 800)
+# =========================================================
+# Construir matrius de temps
+# Cada columna = una execució
+# =========================================================
 
-par(mfrow = c(2, 4))
+bfs_times <- cbind(
+  data_0[[bfs_col]],
+  data_1[[bfs_col]],
+  data_2[[bfs_col]],
+  data_3[[bfs_col]],
+  data_4[[bfs_col]]
+)
 
-hist(paired[[dfs_col]],  col="#4C72B0", main="Temps DFS",  xlab="ms")
-hist(paired[[bfs_col]],  col="#DD8452", main="Temps BFS",  xlab="ms")
-hist(paired$Diff,        col="#55A868", main="DFS - BFS",  xlab="ms")
+dfs_times <- cbind(
+  data_0[[dfs_col]],
+  data_1[[dfs_col]],
+  data_2[[dfs_col]],
+  data_3[[dfs_col]],
+  data_4[[dfs_col]]
+)
 
-hist(paired[[nodes_col]],   col="#C44E52", main="Nodes",   xlab="")
-hist(paired[[edges_col]],   col="#937860", main="Arestes", xlab="")
-hist(paired[[density_col]], col="#8C8C8C", main="Densitat", xlab="")
+# =========================================================
+# Calcular mitjanes. Per reduir soroll de dades i suavitzar
+# variabilitat
+# =========================================================
+
+bfs_mean <- rowMeans(
+  bfs_times,
+  na.rm = TRUE
+)
+
+dfs_mean <- rowMeans(
+  dfs_times,
+  na.rm = TRUE
+)
+
+# =========================================================
+# Crear dataset final
+# =========================================================
+
+paired <- data_0
+
+paired$BFS_Mean <- bfs_mean
+paired$DFS_Mean <- dfs_mean
+
+# =========================================================
+# Diferència directa
+# Negatiu -> DFS més ràpid
+# =========================================================
+
+paired$Diff <-
+  paired$DFS_Mean -
+  paired$BFS_Mean
+
+# =========================================================
+# Diferència de logaritmes
+# =========================================================
+
+paired$Log_Diff <-
+  log(paired$DFS_Mean) -
+  log(paired$BFS_Mean)
+
+# =========================================================
+# Logaritme del ratio
+# =========================================================
+
+paired$Log_Ratio <-
+  log(
+    paired$DFS_Mean /
+    paired$BFS_Mean
+  )
+
+# =========================================================
+# Ratio original
+# < 1 -> DFS més ràpid
+# =========================================================
+
+paired$Ratio <-
+  paired$DFS_Mean /
+  paired$BFS_Mean
+
+# =========================================================
+# Speedup
+# > 1 -> DFS més ràpid
+# =========================================================
+
+paired$Speedup <-
+  paired$BFS_Mean /
+  paired$DFS_Mean
+
+# =========================================================
+# Eliminar files amb NA
+# =========================================================
+
+paired <- paired[
+  !is.na(paired$BFS_Mean) &
+  !is.na(paired$DFS_Mean),
+]
+
+cat(
+  "Observacions aparellades:",
+  nrow(paired),
+  "\n"
+)
+
+# =========================================================
+# Estadística descriptiva
+# =========================================================
+
+cat("\n=============================\n")
+cat("MITJANES GLOBALS\n")
+cat("=============================\n")
+
+cat(
+  "DFS Mean:",
+  mean(paired$DFS_Mean),
+  "ms\n"
+)
+
+cat(
+  "BFS Mean:",
+  mean(paired$BFS_Mean),
+  "ms\n"
+)
+
+cat(
+  "Diff Mean:",
+  mean(paired$Diff),
+  "ms\n"
+)
+
+cat(
+  "Mean Ratio DFS/BFS:",
+  mean(paired$Ratio),
+  "\n"
+)
+
+cat(
+  "Mean Speedup BFS/DFS:",
+  mean(paired$Speedup),
+  "\n"
+)
+
+# =========================================================
+# T-TESTS
+# =========================================================
+
+cat("\n=============================\n")
+cat("PAIRED T-TEST\n")
+cat("=============================\n")
+
+print(
+  t.test(
+    paired$DFS_Mean,
+    paired$BFS_Mean,
+    paired = TRUE,
+    conf.level = 0.95
+  )
+)
+
+cat("\n=============================\n")
+cat("PAIRED T-TEST LOGS\n")
+cat("=============================\n")
+
+print(
+  t.test(
+    log(paired$DFS_Mean),
+    log(paired$BFS_Mean),
+    paired = TRUE,
+    conf.level = 0.95
+  )
+)
+
+# =========================================================
+# HISTOGRAMES
+# =========================================================
+
+png(
+  "histograms.png",
+  width = 1800,
+  height = 1200
+)
+
+par(mfrow = c(3, 4))
+
+# =========================================================
+# Temps originals
+# =========================================================
+
+hist(
+  paired$DFS_Mean,
+  col = "#4C72B0",
+  main = "Temps DFS",
+  xlab = "ms"
+)
+
+hist(
+  paired$BFS_Mean,
+  col = "#DD8452",
+  main = "Temps BFS",
+  xlab = "ms"
+)
+
+hist(
+  paired$Diff,
+  col = "#55A868",
+  main = "DFS - BFS",
+  xlab = "ms"
+)
+
+# =========================================================
+# Característiques graf
+# =========================================================
+
+hist(
+  paired[[nodes_col]],
+  col = "#C44E52",
+  main = "Nodes",
+  xlab = ""
+)
+
+hist(
+  paired[[edges_col]],
+  col = "#937860",
+  main = "Arestes",
+  xlab = ""
+)
+
+hist(
+  paired[[density_col]],
+  col = "#8C8C8C",
+  main = "Densitat",
+  xlab = ""
+)
+
+# =========================================================
+# Diferència logs
+# =========================================================
+
+hist(
+  paired$Log_Diff,
+  col = "#8172B2",
+  main = "log(DFS)-log(BFS)",
+  xlab = ""
+)
+
+qqnorm(
+  paired$Log_Diff,
+  main = "QQ Log Diff"
+)
+
+qqline(paired$Log_Diff)
+
+# =========================================================
+# Log ratio
+# =========================================================
+
+hist(
+  paired$Log_Ratio,
+  col = "#64B5CD",
+  main = "log(DFS/BFS)",
+  xlab = ""
+)
+
+qqnorm(
+  paired$Log_Ratio,
+  main = "QQ Log Ratio"
+)
+
+qqline(paired$Log_Ratio)
+
+# =========================================================
+# Speedup
+# =========================================================
+
+hist(
+  paired$Speedup,
+  col = "#CCB974",
+  main = "Speedup BFS/DFS",
+  xlab = ""
+)
 
 dev.off()
+
+# =========================================================
+# BOXPLOT
+# =========================================================
+
+plot_data <- data.frame(
+  DFS = paired$DFS_Mean,
+  BFS = paired$BFS_Mean
+)
+
+melted <- melt(plot_data)
+
+png(
+  "boxplot.png",
+  width = 800,
+  height = 600
+)
+
+ggplot(
+  melted,
+  aes(
+    x = variable,
+    y = value,
+    fill = variable
+  )
+) +
+  geom_boxplot() +
+  labs(
+    title = "Comparació DFS vs BFS",
+    x = "Algorisme",
+    y = "Temps (ms)"
+  ) +
+  theme_minimal()
+
+dev.off()
+
+# =========================================================
+# Exportar resultats
+# =========================================================
+
+write.csv(
+  paired,
+  "paired_results.csv",
+  row.names = FALSE
+)
+
+cat("\nFitxers generats:\n")
+cat("- boxplot.png\n")
+cat("- histograms.png\n")
+cat("- paired_results.csv\n")
