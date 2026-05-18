@@ -111,16 +111,13 @@ namespace tester {
     }
 
     auto tester_app::run_tests() -> void {
-        for ( const auto &[path, current_graph]: m_graphs ) {
-
-            LOG_INFO( "Running test on graph: {}", path );
-
-            // Selecciono nodos aleatorios para buscar
-            const auto &nodes{ current_graph.get_nodes() };
-
+        // Selecciono un nodo aleatorio para iniciar las búsquedas en cada grafo
+        std::unordered_map<std::string, std::int32_t> start_nodes{};
+        for ( const auto &[path, graph]: m_graphs ) {
+            const auto &nodes{ graph.get_nodes() };
             if ( nodes.empty() ) {
-                LOG_WARN( "Graph {} does not have enough nodes to perform search tests.", current_graph.get_debug_name() );
-                return;
+                LOG_WARN( "Graph {} is empty, skipping tests.", path );
+                continue;
             }
 
             auto it_start{ std::next( std::begin( nodes ), base::next_int() % nodes.size() ) };
@@ -131,62 +128,75 @@ namespace tester {
                 node_start = ( std::int32_t )*it_start;
             }
 
-            double dfs_time_ms{};
-            double bfs_time_ms{};
+            start_nodes[path] = node_start;
 
-            base::scoped_timer timer_bfs{ "run_bfs" };
-            auto result_bfs{ base::find_network_bfs( current_graph, node_start ) };
-            bfs_time_ms = timer_bfs.elapsed();
-
-            base::scoped_timer timer_dfs{ "run_dfs" };
-            auto result_dfs{ base::find_network_dfs( current_graph, node_start ) };
-            dfs_time_ms = timer_dfs.elapsed();
-
-            m_reports[path].dfs_time_ms = dfs_time_ms;
-            m_reports[path].bfs_time_ms = bfs_time_ms;
-
-            m_reports[path].node_start = node_start;
-
-            LOG_INFO( "Graph {} has BFS result: {} for node {}", current_graph.get_debug_name(), bfs_time_ms, node_start );
-            LOG_INFO( "Graph {} has DFS result: {} for node {}", current_graph.get_debug_name(), dfs_time_ms, node_start );
-
-            // Para depuración pero no es necesario. Lista de nodos visitados por BFS y DFS
-            for ( const auto &node: result_bfs ) {
-                LOG_INFO( "BFS visited node: {}", node );
-            }
-
-            for ( const auto &node: result_dfs ) {
-                LOG_INFO( "DFS visited node: {}", node );
-            }
+            LOG_INFO( "Selected start node {} for graph {}", node_start, path );
         }
 
-        // abrir archivo CSV para escribir resultados
-        std::ofstream csv_file{ "test_report.csv" };
-        if ( csv_file.is_open() ) {
-            csv_file << "Graph Name,Density,Node Count,Edge Count,DFS Time (ms),BFS Time (ms),Start Node\n";
-        }
+        std::uint32_t test_count{ 5 };
+        for ( std::uint32_t i{ 0 }; i < test_count; ++i ) {
+            for ( const auto &[path, current_graph]: m_graphs ) {
+                std::int32_t node_start{ start_nodes[path] };
 
-        for ( const auto &[path, report]: m_reports ) {
-            // Para depuración pero no es necesario
-            LOG_INFO( "Test Report for Graph: {}", path );
-            LOG_INFO( "  Density: {}", report.graph_density );
-            LOG_INFO( "  Nodes: {}", report.graph_nodes );
-            LOG_INFO( "  Edges: {}", report.graph_edges );
-            LOG_INFO( "  DFS Time (ms): {}", report.dfs_time_ms );
-            LOG_INFO( "  BFS Time (ms): {}", report.bfs_time_ms );
+                LOG_INFO( "Running test on graph: {}", path );
 
-            LOG_INFO( "  Start Node: {}", report.node_start );
+                double dfs_time_ms{};
+                double bfs_time_ms{};
 
-            // Serializar a CSV
+                base::scoped_timer timer_bfs{ "run_bfs" };
+                auto result_bfs{ base::find_network_bfs( current_graph, node_start ) };
+                bfs_time_ms = timer_bfs.elapsed();
+
+                base::scoped_timer timer_dfs{ "run_dfs" };
+                auto result_dfs{ base::find_network_dfs( current_graph, node_start ) };
+                dfs_time_ms = timer_dfs.elapsed();
+
+                m_reports[path].dfs_time_ms = dfs_time_ms;
+                m_reports[path].bfs_time_ms = bfs_time_ms;
+
+                m_reports[path].node_start = node_start;
+
+                LOG_INFO( "Graph {} has BFS result: {} for node {}", current_graph.get_debug_name(), bfs_time_ms, node_start );
+                LOG_INFO( "Graph {} has DFS result: {} for node {}", current_graph.get_debug_name(), dfs_time_ms, node_start );
+
+                // Para depuración pero no es necesario. Lista de nodos visitados por BFS y DFS
+                for ( const auto &node: result_bfs ) {
+                    LOG_INFO( "BFS visited node: {}", node );
+                }
+
+                for ( const auto &node: result_dfs ) {
+                    LOG_INFO( "DFS visited node: {}", node );
+                }
+            }
+
+            // abrir archivo CSV para escribir resultados
+            std::ofstream csv_file{ base::format( "report_{}.csv", i) };
             if ( csv_file.is_open() ) {
-                csv_file << std::format( "{},{},{},{},{},{},{}\n",
-                                         report.graph_name,
-                                         report.graph_density,
-                                         report.graph_nodes,
-                                         report.graph_edges,
-                                         report.dfs_time_ms,
-                                         report.bfs_time_ms,
-                                        report.node_start );
+                csv_file << "Graph Name,Density,Node Count,Edge Count,DFS Time (ms),BFS Time (ms),Start Node\n";
+            }
+
+            for ( const auto &[path, report]: m_reports ) {
+                // Para depuración pero no es necesario
+                LOG_INFO( "Test Report for Graph: {}", path );
+                LOG_INFO( "  Density: {}", report.graph_density );
+                LOG_INFO( "  Nodes: {}", report.graph_nodes );
+                LOG_INFO( "  Edges: {}", report.graph_edges );
+                LOG_INFO( "  DFS Time (ms): {}", report.dfs_time_ms );
+                LOG_INFO( "  BFS Time (ms): {}", report.bfs_time_ms );
+
+                LOG_INFO( "  Start Node: {}", report.node_start );
+
+                // Serializar a CSV
+                if ( csv_file.is_open() ) {
+                    csv_file << std::format( "{},{},{},{},{},{},{}\n",
+                                            report.graph_name,
+                                            report.graph_density,
+                                            report.graph_nodes,
+                                            report.graph_edges,
+                                            report.dfs_time_ms,
+                                            report.bfs_time_ms,
+                                            report.node_start );
+                }
             }
         }
     }

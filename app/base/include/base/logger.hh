@@ -109,6 +109,11 @@ namespace base {
         std::printf("%s%s\033[0m\n", ansi.data(), result.c_str()); // Resetear color de la consola
     }
 
+    template<typename... Args>
+    inline std::string format(const std::format_string<Args...> fmt, Args&&... args) {
+        return std::vformat(fmt.get(), std::make_format_args(args...));
+    }
+    
     class logger {
     public:
         // Loggea el mensaje sin cambios
