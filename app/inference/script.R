@@ -375,14 +375,25 @@ hist(
   xlab = ""
 )
 
+dev.off()
+
 # =========================================================
 # QQ Plots
 # =========================================================
 
+png(
+  "qqplots.png",
+  width = 3000,
+  height = 1200,
+  res = 300
+)
+
+par(mfrow = c(1, 3))
+
 qqnorm(
   paired$Diff,
   main = "QQ Plot DFS - BFS",
-  ylab = "Quantils mostral",
+  ylab = "Quantils mostra",
   xlab = "Quantils teòrics"
 )
 
@@ -390,14 +401,18 @@ qqline(paired$Diff)
 
 qqnorm(
   paired$Log_Diff,
-  main = "QQ Log Diff"
+  main = "QQ Log Diff",
+  ylab = "Quantils mostra",
+  xlab = "Quantils teòrics"
 )
 
 qqline(paired$Log_Diff)
 
 qqnorm(
   paired$Log_Ratio,
-  main = "QQ Log Ratio"
+  main = "QQ Log Ratio",
+  ylab = "Quantils mostra",
+  xlab = "Quantils teòrics"
 )
 
 qqline(paired$Log_Ratio)
@@ -560,6 +575,8 @@ write.csv(
 )
 
 cat("\nFitxers generats:\n")
+cat("- qqplots.png\n")
 cat("- boxplot.png\n")
 cat("- histograms.png\n")
+cat("- bland_altman.png\n")
 cat("- paired_results.csv\n")
